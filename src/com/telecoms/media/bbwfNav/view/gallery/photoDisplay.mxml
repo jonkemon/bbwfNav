@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" backgroundColor="#FFFFFF" 
+		height="100%" 
+		width="100%" 
+		horizontalScrollPolicy="off" 
+		verticalScrollPolicy="off"
+		xmlns:gallery="com.telecoms.media.bbwfNav.view.gallery.*" 
+		xmlns:controls="com.benclinkinbeard.controls.*" 
+		y="0" 
+		autoLayout="false"
+		>
+<mx:Script>
+	<![CDATA[
+		import mx.events.ListEvent;
+		import mx.effects.Tween;
+		import com.telecoms.media.bbwfNav.control.events.gallery.LoadImagesEvent;
+		import mx.controls.Image;
+ 		import com.telecoms.media.bbwfNav.model.PhotosModelLocator;
+        import mx.events.SliderEvent;
+        import com.telecoms.media.bbwfNav.view.gallery.SmoothScrollingHorizontalList;
+        import mx.effects.easing.*;
+		import flash.external.*;
+		import flash.display.StageDisplayState;
+		
+		[Bindable]
+		public var model:PhotosModelLocator = PhotosModelLocator.getInstance();
+		private var tween:Tween;
+		private var itemIndex:int = 0;
+		
+		[Bindable]
+		[Embed(source="images/gallery.png")]
+		public var menu1:Class;
+		
+		[Bindable]
+		[Embed(source="images/linked_in.png")]
+		public var menu2:Class;
+		
+		[Bindable]
+		[Embed(source="images/twitter.png")]
+		public var menu3:Class;
+		
+		[Bindable]
+		[Embed(source="images/video.png")]
+		public var menu4:Class;
+		
+		[Bindable]
+		[Embed(source="images/community.png")]
+		public var menu5:Class;
+		
+		// Load Image data
+		public function loadXML():void
+		{
+			var event:LoadImagesEvent=null;
+			event=new LoadImagesEvent();
+			event.dispatch();
+		}
+
+		// Button Controls for navigating images
+        private function scrollHorizontalList(dir:String):void
+        {
+            var pos:Number = photoTileList.horizontalScrollPosition;
+            var end:Number = photoTileList.maxVerticalScrollPosition;
+           
+            if(dir == "right"){
+				trace(itemIndex);
+            	if(itemIndex < 1){
+            		itemIndex = 0;
+            	}
+            	itemIndex = itemIndex + 1;
+                end = list.columnWidth * itemIndex;
+                if(tween != null) tween.endTween();
+                tween = new Tween(this, pos, end, 1000, 10, tweenUpdateHandler, tweenEndHandler);
+                tween.easingFunction = Circular.easeOut;
+            } else if (dir == "left") {
+            	if(itemIndex >= model.photoObjects.length - 1){
+            	itemIndex = model.photoObjects.length -2;
+            	}
+            	itemIndex = itemIndex - 1;
+                end = list.columnWidth * itemIndex;
+                if(tween != null) tween.endTween();
+                tween = new Tween(this, pos, end, 1000, 10, tweenUpdateHandler, tweenEndHandler);
+                tween.easingFunction = Circular.easeOut;
+            }
+        }
+       
+        private function tweenUpdateHandler(value:String):void
+        {
+            photoTileList.horizontalScrollPosition = Math.round(Number(value)*100)/100;
+        }
+        private function tweenEndHandler(value:String):void
+        {
+            //trace('tween end value: ' + value);
+        }
+        private function showFullImage(event:ListEvent):void
+        {
+        	var i:int = new int;
+        	var imageUrlString:String = new String;
+        	i = event.columnIndex;
+        	imageUrlString = model.photoAdresses.images[i].url;
+        	var imageURL:URLRequest = new URLRequest(imageUrlString);
+    		navigateToURL(imageURL);
+        }
+	]]>
+</mx:Script>
+
+	<mx:Canvas id="photoTileList" width="600" height="100%" verticalScrollPolicy="off" horizontalScrollPolicy="off" x="36" autoLayout="false">
+		<gallery:SmoothScrollingHorizontalList id="list" width="600"
+			 columnWidth="150" verticalScrollPolicy="off" horizontalScrollPolicy="off"
+			 selectable="false" borderColor="#FFFFFF" itemClick="showFullImage(event);" fontSize="11">
+			<gallery:dataProvider>
+				<mx:Array>
+					<mx:Object label="Gallery" icon="{menu1}" id="gallery"/>
+					<mx:Object label="Linked In" icon="{menu2}" id="linkedIn"/>
+					<mx:Object label="Twitter" icon="{menu3}" id="twitter"/>
+					<mx:Object label="Video &amp; Podcasts" icon="{menu4}" id="video"/>
+					<mx:Object label="My Broadband World Forum" icon="{menu5}" id="community"/>
+				</mx:Array>
+			</gallery:dataProvider>
+		</gallery:SmoothScrollingHorizontalList>
+	</mx:Canvas>
+
+	<mx:Canvas height="100%" width="100%" horizontalScrollPolicy="off">
+		<mx:Button id="previous"
+			upSkin="@Embed('images/arrow.png')"
+			downSkin="@Embed('images/arrow.png')"
+			overSkin="@Embed('images/arrow.png')"
+			click="scrollHorizontalList('left')"
+			label=""
+			x="10" y="35"/>
+		<mx:Button id="next"
+			upSkin="@Embed('images/arrow.png')" 
+			downSkin="@Embed('images/arrow.png')"
+			overSkin="@Embed('images/arrow.png')" 
+			rotation="180"
+			click="scrollHorizontalList('right')"
+			label=""
+			x="{photoTileList.width+70}" y="67"/>
+	</mx:Canvas>
+</mx:Canvas>
